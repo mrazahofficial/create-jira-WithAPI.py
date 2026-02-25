@@ -1,55 +1,65 @@
+# This code sample uses the 'requests' library:
+# http://docs.python-requests.org
 import requests
 from requests.auth import HTTPBasicAuth
 import json
+from flask import Flask
 
-# 1. DOUBLE CHECK THIS URL (Must have /rest/api/3/issue)
-url = "https://mrazahofficial.atlassian.net/rest/api/3/issue"
+app = Flask(__name__)
 
-# 2. ARE YOU SURE THE TOKEN IS FRESH? 
-# Create a new one here: https://id.atlassian.com/manage-profile/security/api-tokens
-email = "abc@gmail.com"
-token = ""
+# Define a route that handles GET requests
+@app.route('/createJira', methods=['POST'])
+def createJira():
 
-auth = HTTPBasicAuth(email, token)
+    url = "https://mrazahofficial.atlassian.net/rest/api/3/issue"
 
-headers = {
-  "Accept": "application/json",
-  "Content-Type": "application/json"
-}
+    API_TOKEN=""
 
-# Simplified payload to rule out other errors
-payload = json.dumps({
-    "fields": {
-        "project": {
-            "key": "KAN"
-        },
-        "summary": "Testing from Python",
+    auth = HTTPBasicAuth("mrazah.official@gmail.com", API_TOKEN)
+
+    headers = {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+    }
+
+    payload = json.dumps( {
+        "fields": {
         "description": {
-            "type": "doc",
-            "version": 1,
             "content": [
                 {
-                    "type": "paragraph",
                     "content": [
                         {
-                            "text": "Sent from GitHub Codespaces",
+                            "text": "Order entry fails when selecting supplier.",
                             "type": "text"
                         }
-                    ]
-                }
-            ]
+                    ],
+                    "type": "paragraph"
+                    }
+                ],
+            "type": "doc",
+             "version": 1
+        },
+        "project": {
+           "key": "KAN"
         },
         "issuetype": {
             "id": "10045"
-        }
-    }
-})
+        },
+        "summary": "Main order flow broken",
+    },
+    "update": {}
+    } )
 
-response = requests.request("POST", url, data=payload, headers=headers, auth=auth)
 
-if response.status_code == 201:
-    print("Success! Issue Created.")
-    print(response.text)
-else:
-    print(f"Failed with status: {response.status_code}")
-    print(response.text)
+    response = requests.request(
+        "POST",
+        url,
+        data=payload,
+        headers=headers,
+        auth=auth
+    )
+
+    return json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": "))
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
